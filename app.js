@@ -3,15 +3,15 @@ let currentSectionId = 1;
 let currentChapterNum = 1;
 let currentFontSize = 19; // Default px
 let activeTheme = 'dark'; // 'dark' | 'light' | 'sepia'
-let parsedChapters = []; // Parsed list of chapters for section 1
+let parsedChapters = []; // Parsed list of chapters for current section
 let currentSpeakingElement = null; // Verse item currently being read aloud
 let speechSynth = window.speechSynthesis || null;
 let speechAvailable = 'speechSynthesis' in window;
 let speechRate = 0.92; // Default speech speed rate (0.5 to 1.5)
 let selectedVoiceURI = ''; // User chosen voice identifier
 
-// Parsing Section 1 Text into Structured Data
-function parseSection1Markdown(rawText) {
+// Generalized parser for any section markdown
+function parseSectionMarkdown(rawText) {
   const lines = rawText.split('\n');
   const chapters = [];
   let currentChapter = null;
@@ -21,7 +21,7 @@ function parseSection1Markdown(rawText) {
     const line = lines[i].trim();
     if (!line) continue;
 
-    // Check for Part headers
+    // Check for Part headers / Group headings
     if (line.startsWith('PART ONE:') || line.startsWith('PART TWO:') || line.startsWith('PART THREE:')) {
       currentPartBanner = {
         title: line,
@@ -38,7 +38,7 @@ function parseSection1Markdown(rawText) {
       continue;
     }
 
-    // Check for Chapter header e.g. "Chapter 1, I" or "Chapter 6, VI - The Descent of the Watchers"
+    // Check for Chapter header e.g. "Chapter 37, XXXVII" or "Chapter 38, XXXVIII - The First Parable"
     const chapMatch = line.match(/^Chapter\s+(\d+)(?:,\s*([IVXLCDM]+))?(?:\s*-\s*(.+))?$/i);
     if (chapMatch) {
       const num = parseInt(chapMatch[1], 10);
@@ -57,7 +57,7 @@ function parseSection1Markdown(rawText) {
       continue;
     }
 
-    // Check for Verses e.g. "1. The words of..."
+    // Check for Verses e.g. "1. The second vision..."
     const verseMatch = line.match(/^(\d+)\.\s+(.+)$/);
     if (verseMatch && currentChapter) {
       currentChapter.verses.push({
@@ -106,6 +106,10 @@ function renderSectionsSidebar() {
 // Render Quick Chapter Grid in Sidebar
 function renderChapterChips() {
   const grid = document.getElementById('chapter-chips-grid');
+  const label = document.getElementById('current-section-chips-label');
+  if (label) {
+    label.textContent = `SECTION ${currentSectionId} CHAPTERS`;
+  }
   if (!grid) return;
   grid.innerHTML = '';
 
@@ -316,8 +320,12 @@ function speakVerse(text, element) {
 
 // Chapter Navigation
 function goToChapter(num) {
-  if (num < 1) num = 1;
-  if (num > parsedChapters.length) num = parsedChapters.length;
+  if (parsedChapters.length === 0) return;
+  const minNum = parsedChapters[0].number;
+  const maxNum = parsedChapters[parsedChapters.length - 1].number;
+
+  if (num < minNum) num = minNum;
+  if (num > maxNum) num = maxNum;
   currentChapterNum = num;
 
   renderChapterChips();
@@ -331,17 +339,30 @@ function goToChapter(num) {
 
 function updateStatusDisplay() {
   const display = document.getElementById('curr-status-display');
-  if (display) {
-    display.textContent = `Chapter ${currentChapterNum} of ${parsedChapters.length}`;
+  if (display && parsedChapters.length > 0) {
+    const minNum = parsedChapters[0].number;
+    const maxNum = parsedChapters[parsedChapters.length - 1].number;
+    display.textContent = `Chapter ${currentChapterNum} (${minNum}–${maxNum})`;
   }
 }
 
 // Section Selector
 function selectSection(secId) {
+  if (!RAW_SECTIONS[secId]) return;
+  stopSpeech();
   currentSectionId = secId;
+  localStorage.setItem('enoch_current_section', secId);
+
+  // Parse new section
+  parsedChapters = parseSectionMarkdown(RAW_SECTIONS[secId]);
+  currentChapterNum = parsedChapters[0] ? parsedChapters[0].number : 1;
+
   renderSectionsSidebar();
-  // Currently Section 1 is active. When future sections are added, load their data here.
-  goToChapter(1);
+  renderChapterChips();
+  renderCurrentContent();
+
+  // Scroll to top of content
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Font Size Controls
@@ -458,8 +479,15 @@ function handleSearch(query) {
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
-  // Parse Data
-  parsedChapters = parseSection1Markdown(SECTION_1_RAW);
+  // Restore saved section preference or default to 1
+  const savedSec = parseInt(localStorage.getItem('enoch_current_section'), 10);
+  if (savedSec && RAW_SECTIONS[savedSec]) {
+    currentSectionId = savedSec;
+  }
+
+  // Parse Initial Section Data
+  parsedChapters = parseSectionMarkdown(RAW_SECTIONS[currentSectionId] || RAW_SECTIONS[1]);
+  currentChapterNum = parsedChapters[0] ? parsedChapters[0].number : 1;
 
   // Restore saved preferences
   const savedTheme = localStorage.getItem('enoch_theme') || 'dark';

@@ -671,6 +671,12 @@ body {
   font-size: 0.9rem;
 }
 
+.nav-arrow-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .curr-status {
   color: var(--text-secondary);
   font-size: 0.85rem;

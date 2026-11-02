@@ -355,10 +355,18 @@ function navigateStep(direction) {
 
 function updateStatusDisplay() {
   const display = document.getElementById('curr-status-display');
-  if (display && parsedChapters.length > 0) {
-    const currentIndex = parsedChapters.findIndex(c => String(c.number) === String(currentChapterNum));
-    display.textContent = `Chapter ${currentChapterNum} (${currentIndex + 1} of ${parsedChapters.length})`;
+  if (display) {
+    const totalSections = ENOCH_SECTIONS.length;
+    const sec = ENOCH_SECTIONS.find(s => s.id === currentSectionId);
+    const secTitle = sec ? sec.title : '';
+    display.textContent = `Section ${currentSectionId} of ${totalSections}: ${secTitle}`;
   }
+
+  // Update prev/next section button states
+  const prevBtn = document.getElementById('prev-sec-btn');
+  const nextBtn = document.getElementById('next-sec-btn');
+  if (prevBtn) prevBtn.disabled = currentSectionId <= 1;
+  if (nextBtn) nextBtn.disabled = currentSectionId >= ENOCH_SECTIONS.filter(s => s.status === 'available').length;
 }
 
 // Section Selector
@@ -375,6 +383,7 @@ function selectSection(secId) {
   renderSectionsSidebar();
   renderChapterChips();
   renderCurrentContent();
+  updateStatusDisplay();
 
   // Scroll to top of content
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -392,6 +401,13 @@ function setTheme(theme) {
   activeTheme = theme;
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('enoch_theme', theme);
+
+  // Keep the browser UI (address bar / status bar) in step with the active theme
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) {
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim();
+    if (bg) themeMeta.setAttribute('content', bg);
+  }
 
   const iconEl = document.querySelector('.theme-icon');
   if (iconEl) {
@@ -593,12 +609,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('font-decrease-btn')?.addEventListener('click', () => setFontSize(currentFontSize - 2));
   document.getElementById('font-reset-btn')?.addEventListener('click', () => setFontSize(19));
 
-  // Footer Navigation
-  document.getElementById('prev-chap-btn')?.addEventListener('click', () => {
-    navigateStep(-1);
+  // Footer Section Navigation
+  document.getElementById('prev-sec-btn')?.addEventListener('click', () => {
+    const prevId = currentSectionId - 1;
+    const prevSec = ENOCH_SECTIONS.find(s => s.id === prevId);
+    if (prevSec && prevSec.status === 'available') selectSection(prevId);
   });
-  document.getElementById('next-chap-btn')?.addEventListener('click', () => {
-    navigateStep(1);
+  document.getElementById('next-sec-btn')?.addEventListener('click', () => {
+    const nextId = currentSectionId + 1;
+    const nextSec = ENOCH_SECTIONS.find(s => s.id === nextId);
+    if (nextSec && nextSec.status === 'available') selectSection(nextId);
   });
 
   // Back to top

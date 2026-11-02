@@ -57,11 +57,11 @@ function parseSectionMarkdown(rawText) {
       continue;
     }
 
-    // Check for Verses e.g. "1. The second vision..."
-    const verseMatch = line.match(/^(\d+)\.\s+(.+)$/);
+    // Check for Verses e.g. "1. The second vision..." or grouped verses "4-5. And first..."
+    const verseMatch = line.match(/^(\d+(?:-\d+)?)\.\s+(.+)$/);
     if (verseMatch && currentChapter) {
       currentChapter.verses.push({
-        num: parseInt(verseMatch[1], 10),
+        num: verseMatch[1],
         text: verseMatch[2]
       });
       continue;

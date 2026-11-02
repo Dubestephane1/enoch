@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Book of Enoch — Modern Edition</title>
+  <meta name="description" content="A modern synthesis of the Book of Enoch, drawing from the historic translations of R.H. Charles and Richard Laurence.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <button id="toggle-sidebar-btn" class="icon-btn" aria-label="Toggle navigation drawer" title="Navigation">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <div class="site-title-wrap">
+        <h1 class="site-title">THE BOOK OF ENOCH</h1>
+        <span class="site-subtitle">Modern Comparative Edition</span>
+      </div>
+    </div>
+
+    <!-- Reading Controls -->
+    <div class="nav-controls">
+      <!-- Search Trigger / Quick Jumper -->
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="quick-search" placeholder="Search chapter or text..." autocomplete="off">
+        <span id="search-count" class="search-count"></span>
+      </div>
+
+      <!-- Font Size Adjusters -->
+      <div class="control-group" title="Adjust text size">
+        <button id="font-decrease-btn" class="pill-btn font-control-btn" aria-label="Decrease font size">A−</button>
+        <button id="font-reset-btn" class="pill-btn font-control-btn" aria-label="Reset font size">A</button>
+        <button id="font-increase-btn" class="pill-btn font-control-btn" aria-label="Increase font size">A+</button>
+      </div>
+
+      <!-- Speech Audio Toggle & Settings Menu -->
+      <div class="speech-controls-wrapper">
+        <button id="speech-toggle-btn" class="icon-btn" aria-label="Audio reader controls" title="Audio Reader: click to open settings / click any verse to listen">
+          <span class="speech-icon">🔊</span>
+        </button>
+        <!-- Speech Popover Settings -->
+        <div id="speech-settings-popover" class="speech-popover">
+          <div class="popover-row">
+            <label for="voice-select">Voice</label>
+            <select id="voice-select" class="popover-select">
+              <option value="">Default Voice</option>
+            </select>
+          </div>
+          <div class="popover-row">
+            <label for="speed-slider">Speed: <span id="speed-val">0.9x</span></label>
+            <input type="range" id="speed-slider" min="0.5" max="1.5" step="0.05" value="0.9">
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Switcher -->
+      <button id="theme-toggle-btn" class="icon-btn" aria-label="Switch theme" title="Toggle Dark/Light/Sepia theme">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Reading Progress Bar -->
+  <div id="progress-bar-container">
+    <div id="reading-progress"></div>
+  </div>
+
+  <div class="layout-container">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Table of Contents</div>
+        <button id="close-sidebar-btn" class="close-btn" aria-label="Close sidebar">✕</button>
+      </div>
+
+      <!-- Section Switcher Tabs -->
+      <div class="section-tabs-container">
+        <div class="section-group-label">ALL 7 SECTIONS</div>
+        <nav class="sections-accordion" id="sections-accordion">
+          <!-- Dynamic or Static Section items -->
+        </nav>
+      </div>
+
+      <!-- Quick Chapter Grid for Current Section -->
+      <div class="current-section-nav">
+        <div class="section-group-label">SECTION 1 CHAPTERS</div>
+        <div class="chapter-chips-grid" id="chapter-chips-grid"></div>
+      </div>
+    </aside>
+
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- Main Content Reader -->
+    <main class="reading-viewport">
+      <article class="content-wrapper" id="content-wrapper">
+        <!-- Hero Banner -->
+        <header class="work-header">
+          <div class="sacred-crest">✦ 𐤇𐤍𐤅𐤊 ✦</div>
+          <h2 class="work-title">The Book of Enoch</h2>
+          <p class="work-attribution">
+            Harmonized & modernized from the foundational translations of <strong>R. H. Charles</strong> (1912) and <strong>Richard Laurence</strong> (1821).
+          </p>
+          <div class="work-meta-chips">
+            <span class="badge">Circa 300 BCE – 1st Century</span>
+            <span class="badge">7 Planned Sections</span>
+            <span class="badge active-badge">Section I Available</span>
+          </div>
+        </header>
+
+        <!-- Dynamic Book Text Container -->
+        <div id="book-text-area" class="book-text-area">
+          <!-- Chapter content populated by data.js & app.js -->
+        </div>
+
+        <!-- Section Navigation Footer -->
+        <nav class="section-footer-nav" aria-label="Bottom Navigation">
+          <button id="prev-chap-btn" class="nav-arrow-btn">
+            ← Previous Chapter
+          </button>
+          <div class="curr-status" id="curr-status-display">Chapter 1 of 36</div>
+          <button id="next-chap-btn" class="nav-arrow-btn">
+            Next Chapter →
+          </button>
+        </nav>
+      </article>
+    </main>
+  </div>
+
+  <!-- Floating Jump to Top -->
+  <button id="back-to-top" class="back-to-top" aria-label="Back to top" title="Return to top">▲</button>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+

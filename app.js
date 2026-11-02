@@ -38,10 +38,10 @@ function parseSectionMarkdown(rawText) {
       continue;
     }
 
-    // Check for Chapter header e.g. "Chapter 37, XXXVII" or "Chapter 38, XXXVIII - The First Parable"
-    const chapMatch = line.match(/^Chapter\s+(\d+)(?:,\s*([IVXLCDM]+))?(?:\s*-\s*(.+))?$/i);
+    // Check for Chapter header e.g. "Chapter 37, XXXVII", "Chapter 91-a, XCI-a", or "Chapter 38, XXXVIII - The First Parable"
+    const chapMatch = line.match(/^Chapter\s+([\w-]+)(?:,\s*([\w-]+))?(?:\s*-\s*(.+))?$/i);
     if (chapMatch) {
-      const num = parseInt(chapMatch[1], 10);
+      const num = chapMatch[1];
       const roman = chapMatch[2] || '';
       const subtitle = chapMatch[3] || '';
 
@@ -319,30 +319,45 @@ function speakVerse(text, element) {
 }
 
 // Chapter Navigation
-function goToChapter(num) {
+function goToChapter(identifier) {
   if (parsedChapters.length === 0) return;
-  const minNum = parsedChapters[0].number;
-  const maxNum = parsedChapters[parsedChapters.length - 1].number;
+  
+  // Find chapter by exact match or by index
+  let targetIndex = parsedChapters.findIndex(c => String(c.number) === String(identifier));
+  if (targetIndex === -1) {
+    if (typeof identifier === 'number') {
+      targetIndex = Math.max(0, Math.min(parsedChapters.length - 1, identifier));
+    } else {
+      targetIndex = 0;
+    }
+  }
 
-  if (num < minNum) num = minNum;
-  if (num > maxNum) num = maxNum;
-  currentChapterNum = num;
+  const targetChap = parsedChapters[targetIndex];
+  currentChapterNum = targetChap.number;
 
   renderChapterChips();
   updateStatusDisplay();
 
-  const targetEl = document.getElementById(`chapter-${num}`);
+  const targetEl = document.getElementById(`chapter-${targetChap.number}`);
   if (targetEl) {
     targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function navigateStep(direction) {
+  if (parsedChapters.length === 0) return;
+  const currentIndex = parsedChapters.findIndex(c => String(c.number) === String(currentChapterNum));
+  const newIndex = currentIndex + direction;
+  if (newIndex >= 0 && newIndex < parsedChapters.length) {
+    goToChapter(parsedChapters[newIndex].number);
   }
 }
 
 function updateStatusDisplay() {
   const display = document.getElementById('curr-status-display');
   if (display && parsedChapters.length > 0) {
-    const minNum = parsedChapters[0].number;
-    const maxNum = parsedChapters[parsedChapters.length - 1].number;
-    display.textContent = `Chapter ${currentChapterNum} (${minNum}–${maxNum})`;
+    const currentIndex = parsedChapters.findIndex(c => String(c.number) === String(currentChapterNum));
+    display.textContent = `Chapter ${currentChapterNum} (${currentIndex + 1} of ${parsedChapters.length})`;
   }
 }
 
@@ -580,10 +595,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Footer Navigation
   document.getElementById('prev-chap-btn')?.addEventListener('click', () => {
-    goToChapter(currentChapterNum - 1);
+    navigateStep(-1);
   });
   document.getElementById('next-chap-btn')?.addEventListener('click', () => {
-    goToChapter(currentChapterNum + 1);
+    navigateStep(1);
   });
 
   // Back to top
@@ -612,9 +627,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
     if (e.key === 'ArrowRight' || e.key === 'PageDown') {
-      goToChapter(currentChapterNum + 1);
+      navigateStep(1);
     } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-      goToChapter(currentChapterNum - 1);
+      navigateStep(-1);
     }
   });
 });
